@@ -1,13 +1,16 @@
-import sublime, sublime_plugin, os, re
+import sublime, sublime_plugin, os, re, subprocess
+
+settings = sublime.load_settings('Notational.sublime-settings')
 
 class FollowNoteLinkCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        directory = "/Users/dansheffler/Dropbox/Notes/"
+        directory = settings.get('notational_directory')
+        directory = os.path.expanduser(directory)
+        extension = settings.get('notational_extension')
         window = self.view.window()
-        #find the cursor
         location = self.view.sel()[0]
         selected_text = self.view.substr(location)
-        the_file = directory+selected_text+".md"
+        the_file = directory+selected_text+extension
 
         if os.path.exists(the_file):
             #open the already-created page.
@@ -20,11 +23,11 @@ class FollowNoteLinkCommand(sublime_plugin.TextCommand):
 
 class InsertNoteLinkCommand(sublime_plugin.TextCommand):
     def run(self, edit):
-        self.files = os.listdir("/Users/dansheffler/Dropbox/Notes")
-        self.modified_files = [item.replace(".md","") for item in self.files]
-
-
-
+        directory = settings.get('notational_directory')
+        directory = os.path.expanduser(directory)
+        extension = settings.get('notational_extension')
+        self.files = os.listdir(directory)
+        self.modified_files = [item.replace(extension,"") for item in self.files]
         self.view.window().show_quick_panel(self.modified_files, self.on_selection)
 
     def on_selection(self, selection):
@@ -40,6 +43,9 @@ class InsertNoteLinkCommand(sublime_plugin.TextCommand):
 
 class BestNoteUpCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        directory = settings.get('notational_directory')
+        directory = os.path.expanduser(directory)
+        extension = settings.get('notational_extension')
         window = self.view.window()
         search_view = window.views_in_group(0)[0]
         found_regions = search_view.get_regions("best_note")
@@ -50,12 +56,15 @@ class BestNoteUpCommand(sublime_plugin.TextCommand):
         new_best_note_line = search_view.line(new_best_note_point)
         search_view.add_regions("best_note", [new_best_note_line], "search.vi", sublime.DRAW_OUTLINED)
         note_title = search_view.substr(new_best_note_line)
-        the_file = "/Users/dansheffler/Dropbox/Notes/"+note_title+".md"
+        the_file = directory+note_title+extension
         window.focus_group(1)
         window.open_file(the_file, sublime.TRANSIENT)
 
 class BestNoteDownCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        directory = settings.get('notational_directory')
+        directory = os.path.expanduser(directory)
+        extension = settings.get('notational_extension')
         window = self.view.window()
         search_view = window.views_in_group(0)[0]
         found_regions = search_view.get_regions("best_note")
@@ -63,15 +72,18 @@ class BestNoteDownCommand(sublime_plugin.TextCommand):
         new_best_note_line = search_view.line(new_best_note)
         search_view.add_regions("best_note", [new_best_note_line], "search.vi", sublime.DRAW_OUTLINED)
         note_title = search_view.substr(new_best_note_line)
-        the_file = "/Users/dansheffler/Dropbox/Notes/"+note_title+".md"
+        the_file = directory+note_title+extension
         window.focus_group(1)
         window.open_file(the_file, sublime.TRANSIENT)
 
 class OpenBestNoteCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        directory = settings.get('notational_directory')
+        directory = os.path.expanduser(directory)
+        extension = settings.get('notational_extension')
         found_regions = self.view.get_regions("best_note")
         note_title = self.view.substr(found_regions[0])
-        the_file = "/Users/dansheffler/Dropbox/Notes/"+note_title+".md"
+        the_file = directory+note_title+extension
         window = self.view.window()
         window.focus_group(1)
         window.open_file(the_file)
@@ -90,7 +102,6 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
 
             # Figure out what the auto-complete text should be
             found_region = self.search_view.find("^"+self.user_text, 0, sublime.IGNORECASE)
-            print "the fond region is: "+str(found_region)
             if found_region:
                 line_of_found = self.search_view.line(found_region)
                 remainder_region = sublime.Region(found_region.end(), line_of_found.end())
@@ -119,15 +130,12 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
         self.search_view.end_edit(erase_edit)
 
         # Add line by line the results of a spotlight search
-        print "User Text is: "+str(self.user_text)
         self.search_results = ""
-        if self.user_text != "":
-            print "User text is not blank"
-            f = os.popen("mdfind -onlyin ~/Dropbox/Notes/ "+self.user_text)
-            for i in f.readlines():
-                # /Users/dansheffler/Dropbox/Notes/Status Log - 2012-12.md
-                search_item = re.sub(r'/Users/dansheffler/Dropbox/Notes/(.*)\.md', r'\1', i)
-                self.search_results = self.search_results+search_item
+        if self.user_text != "":         
+            p = subprocess.Popen(["mdfind","-onlyin",self.directory,self.user_text],stdout = subprocess.PIPE).stdout
+            self.search_results = p.read()
+            self.search_results = re.sub(r''+self.directory+'([^.]*)'+self.extension, r'\1', self.search_results)
+
 
         search_results_edit = self.search_view.begin_edit()
         self.search_view.insert(search_results_edit,0,self.search_results)
@@ -139,7 +147,7 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
             found_line = self.search_view.line(found_region)
             self.search_view.add_regions("best_note", [found_line], "search.vi", sublime.DRAW_OUTLINED)
             note_title = self.search_view.substr(found_line)
-            the_file = "/Users/dansheffler/Dropbox/Notes/"+note_title+".md"
+            the_file = self.directory+note_title+self.extension
             self.window.focus_group(1)
             self.window.open_file(the_file, sublime.TRANSIENT)
             self.window.focus_view(self.input_panel)
@@ -150,7 +158,7 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
     def on_done(self, search_term):
 
         if search_term != "":
-            the_file = "/Users/dansheffler/Dropbox/Notes/"+search_term+".md"
+            the_file = self.directory+search_term+self.extension
             #Create a new note with the typed text
             if os.path.exists(the_file):
                 #open the already-created page. (fail safe)
@@ -183,9 +191,9 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
         self.window.focus_view(self.starting_view)
 
     def run(self, edit):
-        self.files = os.listdir("/Users/dansheffler/Dropbox/Notes")
-        self.modified_files = [item.replace(".md","") for item in self.files]
-  
+        self.directory = settings.get('notational_directory')
+        self.directory = os.path.expanduser(self.directory)
+        self.extension = settings.get('notational_extension')  
         self.window = self.view.window()
         self.starting_view = self.view
 
@@ -194,8 +202,6 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
             "rows": [0.0, 1.0],
             "cells": [[0, 0, 1, 1], [1, 0, 2, 1]]
             })
-
-        # self.window.set_view_index(self.view, 2, 1)
 
         main_views = self.window.views()
         for current_view in main_views:
@@ -217,22 +223,6 @@ class NoteSearchCommand(sublime_plugin.TextCommand):
         self.input_panel = self.window.show_input_panel("Notes:", "", self.on_done, self.on_change, self.on_cancel)
 
 
-
-    #     self.view.window().show_quick_panel(self.files, self.on_selection)
-
-    # def on_selection(self, selection):
-    #     if selection == -1:
-    #         return
-    #     the_file = "/Users/dansheffler/Dropbox/Notes/"+self.files[selection]
-
-    #     if os.path.exists(the_file):
-    #         #open the already-created page.
-    #         search_view = self.view.window.open_file(the_file)
-
-    #     else:
-    #         #create the file then open it.
-    #         file(the_file, "w")
-    #         search_view = window.open_file(the_file)
 
 
 

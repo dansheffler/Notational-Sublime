@@ -1,0 +1,7 @@
+{
+    // The directory in which your notes are stored.
+    "notational_directory": "~/Dropbox/Notes/",
+
+    // The preferred markdown extension
+    "notational_extension": ".md"
+}
