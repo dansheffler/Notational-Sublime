@@ -1,0 +1,24 @@
+[
+
+//Basic Key-Bindings
+    { "keys": ["super+enter"],
+        "command": "run_macro_file", "args": {"file": "Packages/Notational/FollowLink.sublime-macro"},
+        "context": [{ "key": "selector", "operator": "equal", "operand": "string.other.link.title.mynote.markdown", "match_all": true }]
+    },
+    { "keys": ["[", "["], "command": "insert_note_link" },
+
+
+//Search Result Key-Bindings
+    { "keys": ["super+shift+alt+ctrl+l"], "command": "note_search" },
+
+    { "keys": ["enter"],
+        "command": "open_best_note",
+        "context": [{ "key": "selector", "operator": "equal", "operand": "text.searchresults.notational", "match_all": true }]
+    },
+    { "keys": ["super+shift+alt+ctrl+k"],
+        "command": "best_note_up"
+    },
+    { "keys": ["super+shift+alt+ctrl+j"],
+        "command": "best_note_down"
+    }
+]

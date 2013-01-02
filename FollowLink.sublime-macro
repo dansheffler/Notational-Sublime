@@ -1,0 +1,4 @@
+[
+    {"command": "expand_selection", "args": {"to": "brackets"}},
+    {"command": "follow_note_link"}
+]

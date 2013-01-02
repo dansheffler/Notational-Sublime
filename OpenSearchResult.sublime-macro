@@ -1,0 +1,5 @@
+[
+    {"command": "move_to", "args": {"to": "bol", "extend": false}},
+    {"command": "move_to", "args": {"to": "eol", "extend": true}},
+    {"command": "follow_note_link"}
+]
