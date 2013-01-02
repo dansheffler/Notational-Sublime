@@ -3,7 +3,7 @@
 
 ## Settings ##
 
-There are two settings which Notational-Sublime looks for. `notational_directory` is the directory where you keep your Notational Velocity (or my preferred version, nvAlt) notes. It defaults to `~/Dropbox/Notes/`. `notational_extension` the extension which you prefer for your files. It defaults to `.md`.
+There are two settings which Notational-Sublime looks for. `notational_directory` is the directory where you keep your Notational Velocity (or my preferred version, nvAlt) notes. It defaults to `~/Dropbox/Notes/`. `notational_extension` is the extension which you prefer for your files. It defaults to `.md`.
 
 ## Wiki-style Links ##
 
